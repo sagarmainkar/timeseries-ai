@@ -55,6 +55,7 @@ export default function UnivariateStepper() {
     X_label: "Epochs",
     y_label: "Loss"
   });
+  const [inTraining, setInTraining] = React.useState(false);
 
   const steps = getSteps();
 
@@ -76,6 +77,7 @@ export default function UnivariateStepper() {
     setActiveStep(0);
     setTSData([]);
     setLossData({ X: [], y: [], X_label: "Epochs", y_label: "Loss" });
+    setInTraining(false);
   };
 
   const handleURLChanged = url => {
@@ -124,6 +126,7 @@ export default function UnivariateStepper() {
   };
 
   const handleTrain = event => {
+    setInTraining(true);
     train(
       lags,
       epochs,
@@ -135,6 +138,7 @@ export default function UnivariateStepper() {
       onEpochEnd
     ).then(model => {
       console.log(`[UnivariateStepper.js] Done Training...`);
+      setInTraining(false);
       let timeSeriesData = new TimeSeriesData();
       predict(
         timeSeriesData.getDataFrame(),
@@ -145,7 +149,16 @@ export default function UnivariateStepper() {
         tsData[0].seq_x
       ).then(predict => {
         console.log(`Predictions: ${predict}`);
-        // setLossData(lossData);
+        const tsdata = [];
+        tsdata.push({ ...tsData }[0]);
+        tsdata.push({
+          X: tsData[0].X,
+          y: predict.predictions,
+          X_label: timeID,
+          y_label: depVar
+        });
+
+        setTSData(tsdata);
       });
     });
   };
@@ -220,6 +233,7 @@ export default function UnivariateStepper() {
               data={tsData}
               handleTrain={handleTrain}
               lossData={lossData}
+              inTraining={inTraining}
             />
           </div>
         ) : (

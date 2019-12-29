@@ -17,22 +17,29 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const PlotContainer = props => {
+  let size = 6;
+
+  if (props.inTraining) {
+    size = 12;
+  }
   const classes = useStyles();
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
-        <Grid item lg={6} md={6} xs={12}>
-          <Fab
-            variant="extended"
-            size="small"
-            color="primary"
-            className={classes.button}
-            onClick={props.handlePlot}
-          >
-            Plot
-          </Fab>
-        </Grid>
-        <Grid item lg={6} md={6} xs={12}>
+        {!props.inTraining ? (
+          <Grid item lg={size} md={size} xs={12}>
+            <Fab
+              variant="extended"
+              size="small"
+              color="primary"
+              className={classes.button}
+              onClick={props.handlePlot}
+            >
+              Plot
+            </Fab>
+          </Grid>
+        ) : null}
+        <Grid item lg={size} md={size} xs={12}>
           <Fab
             variant="extended"
             size="small"
@@ -44,14 +51,14 @@ const PlotContainer = props => {
           </Fab>
         </Grid>
 
-        {props.data.length > 0 ? (
-          <Grid item lg={6} md={6} xs={12}>
+        {props.data.length > 0 && !props.inTraining ? (
+          <Grid item lg={size} md={size} xs={12}>
             <TSPlot datasets={props.data} />
           </Grid>
         ) : null}
 
         {props.lossData.X.length > 0 ? (
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid item lg={size} md={size} xs={12}>
             <LossPlot data={props.lossData} />
           </Grid>
         ) : null}
