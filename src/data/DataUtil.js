@@ -59,23 +59,23 @@ export const train = async (
   });
 };
 
-export const predict = (df, timeID, n_steps, n_features, model, seq_x) => {
+export const predict = (timeID, n_steps, n_features, model, seq_x) => {
   return new Promise(resolve => {
     let ten_X = tf.tensor2d(seq_x, [seq_x.length, n_steps]);
     ten_X = ten_X.reshape([ten_X.shape[0], n_steps, n_features]);
     let predictions = [];
     let count = 0;
 
-    predictions = df
-      .select(timeID)
-      .slice(n_steps - 1)
-      .toArray()
-      .map(date => {
-        let predicted = model.predict(ten_X.slice(count, 1));
-        count++;
+    // predictions = df
+    //   .select(timeID)
+    //   .slice(n_steps - 1)
+    //   .toArray()
+    predictions = seq_x.map(date => {
+      let predicted = model.predict(ten_X.slice(count, 1));
+      count++;
 
-        return predicted.dataSync()[0];
-      });
+      return predicted.dataSync()[0];
+    });
 
     resolve({ predictions: predictions });
   });

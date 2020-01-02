@@ -1,8 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import Container from "@material-ui/core/Container";
 import Chart from "chart.js";
+import {useId} from "react-id-generator";
 
 const TimeSeriesPlot = props => {
+  const [plotId] = useId();
+
   const chartColors = {
     red: "rgb(255, 99, 132)",
     orange: "rgb(255, 159, 64)",
@@ -22,7 +25,7 @@ const TimeSeriesPlot = props => {
     const X_label = datasets[0]["X_label"];
     const y_label = datasets[0]["y_label"];
 
-    let ctx = document.getElementById("timeseriesPlot");
+    let ctx = document.getElementById(plotId);
     if (!chart.current) {
       chart.current = new Chart(ctx, {
         type: "line",
@@ -86,6 +89,7 @@ const TimeSeriesPlot = props => {
         data: y,
         fill: false
       };
+    }
       if (datasets.length > 1) {
         chart.current.data.datasets[1] = {
           label: "Predicted",
@@ -103,12 +107,12 @@ const TimeSeriesPlot = props => {
       chart.current.options.scales.yAxes[0].scaleLabel.labelString = y_label;
 
       chart.current.update();
-    }
+    
   });
 
   return (
     <Container>
-      <canvas id="timeseriesPlot" />
+      <canvas id={plotId} />
     </Container>
   );
 };

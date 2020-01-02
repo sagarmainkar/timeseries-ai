@@ -14,6 +14,8 @@ import LagsStep from "./steps/LagsStep";
 import EpochsStep from "./steps/EpochsStep";
 import TimeSeriesData from "../data/TimeSeriesData";
 import PlotContainer from "../containers/PlotContainer";
+import TrainContainer from "../containers/TrainContainer";
+
 import { split_sequences, train, predict } from "../data/DataUtil";
 
 const useStyles = makeStyles(theme => ({
@@ -35,7 +37,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function getSteps() {
-  return ["Data", "TimeID", "Forecast Variable", "Lags", "Epochs"];
+  return ["Data", "TimeID", "Forecast Variable"];
 }
 
 export default function UnivariateStepper() {
@@ -46,21 +48,29 @@ export default function UnivariateStepper() {
   const [columns, setColumns] = React.useState([]);
   const [timeID, setTimeID] = React.useState("");
   const [depVar, setDepVar] = React.useState("");
-  const [lags, setLags] = React.useState(3);
-  const [epochs, setEpochs] = React.useState(5);
   const [tsData, setTSData] = React.useState([]);
-  const [lossData, setLossData] = React.useState({
-    X: [],
-    y: [],
-    X_label: "Epochs",
-    y_label: "Loss"
-  });
-  const [inTraining, setInTraining] = React.useState(false);
 
   const steps = getSteps();
 
   const handleNext = () => {
-    setActiveStep(prevActiveStep => prevActiveStep + 1);
+    setActiveStep(prevActiveStep => {
+      //hnadleFinish
+      if (prevActiveStep === steps.length - 1) {
+        let tsData = new TimeSeriesData();
+        tsData.prepareData(timeID, depVar).then(data => {
+          const tsdata = [];
+          tsdata.push({
+            X: data.X,
+            y: data.y,
+            X_label: timeID,
+            y_label: depVar
+          });
+
+          setTSData(tsdata);
+        });
+      }
+      return prevActiveStep + 1;
+    });
   };
 
   const handleBack = () => {
@@ -72,12 +82,8 @@ export default function UnivariateStepper() {
     setColumns([]);
     setTimeID("");
     setDepVar("");
-    setLags(3);
-    setEpochs(5);
     setActiveStep(0);
     setTSData([]);
-    setLossData({ X: [], y: [], X_label: "Epochs", y_label: "Loss" });
-    setInTraining(false);
   };
 
   const handleURLChanged = url => {
@@ -96,81 +102,6 @@ export default function UnivariateStepper() {
 
   const handleDepVarChanged = depVar => {
     setDepVar(depVar);
-  };
-
-  const handleLagsChanged = lags => {
-    setLags(parseInt(lags, 10));
-  };
-
-  const handleEpochsChanged = epochs => {
-    setEpochs(parseInt(epochs, 10));
-  };
-
-  const handlePlotTS = () => {
-    let tsData = new TimeSeriesData();
-    tsData.prepareData(timeID, depVar).then(data => {
-      split_sequences(data.y, lags).then(d => {
-        const tsdata = [];
-        tsdata.push({
-          X: data.X,
-          y: data.y,
-          seq_x: d.seq_x,
-          seq_y: d.seq_y,
-          X_label: timeID,
-          y_label: depVar
-        });
-
-        setTSData(tsdata);
-      });
-    });
-  };
-
-  const handleTrain = event => {
-    setInTraining(true);
-    train(
-      lags,
-      epochs,
-      1,
-      timeID,
-      depVar,
-      tsData[0].seq_x,
-      tsData[0].seq_y,
-      onEpochEnd
-    ).then(model => {
-      console.log(`[UnivariateStepper.js] Done Training...`);
-      setInTraining(false);
-      let timeSeriesData = new TimeSeriesData();
-      predict(
-        timeSeriesData.getDataFrame(),
-        timeID,
-        lags,
-        1,
-        model,
-        tsData[0].seq_x
-      ).then(predict => {
-        console.log(`Predictions: ${predict}`);
-        const tsdata = [];
-        tsdata.push({ ...tsData }[0]);
-        tsdata.push({
-          X: tsData[0].X,
-          y: predict.predictions,
-          X_label: timeID,
-          y_label: depVar
-        });
-
-        setTSData(tsdata);
-      });
-    });
-  };
-
-  const onEpochEnd = (epoch, logs) => {
-    console.log(`Epoch: ${epoch} Loss:${logs.loss}}`);
-    let losses = { ...lossData };
-
-    losses.X.push(epoch);
-    losses.y.push(logs.loss);
-
-    setLossData(losses);
   };
 
   const getStepContent = step => {
@@ -193,10 +124,6 @@ export default function UnivariateStepper() {
             depVar={depVar}
           />
         );
-      case 3:
-        return <LagsStep clicked={handleLagsChanged} lags={lags} />;
-      case 4:
-        return <EpochsStep clicked={handleEpochsChanged} epochs={epochs} />;
       default:
         return "Unknown step";
     }
@@ -228,12 +155,11 @@ export default function UnivariateStepper() {
               Reset
             </Fab>
             <Divider className={classes.divider} />
-            <PlotContainer
-              handlePlot={handlePlotTS}
-              data={tsData}
-              handleTrain={handleTrain}
-              lossData={lossData}
-              inTraining={inTraining}
+            <PlotContainer data={tsData} />
+            <TrainContainer
+              tsdata={tsData[0]}
+              timeID={timeID}
+              depVar={depVar}
             />
           </div>
         ) : (

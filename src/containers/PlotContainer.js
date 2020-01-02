@@ -1,68 +1,74 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
-import Fab from "@material-ui/core/Fab";
 import TSPlot from "../components/plots/TimeSeriesPlot";
-import LossPlot from "../components/plots/LossPlot";
+import ExpansionPanel from "@material-ui/core/ExpansionPanel";
+import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
+import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import Typography from "@material-ui/core/Typography";
 
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1,
     marginTop: theme.spacing(2)
   },
-
-  button: {
-    marginRight: theme.spacing(1)
+  details: {
+    alignItems: "center"
+  },
+  heading: {
+    fontSize: theme.typography.pxToRem(15)
+  },
+  secondaryHeading: {
+    fontSize: theme.typography.pxToRem(15),
+    color: theme.palette.text.secondary
+  },
+  icon: {
+    verticalAlign: "bottom",
+    height: 20,
+    width: 20
+  },
+  column: {
+    flexBasis: "33.33%"
+  },
+  helper: {
+    borderLeft: `2px solid ${theme.palette.divider}`,
+    padding: theme.spacing(1, 2)
   }
 }));
 
 const PlotContainer = props => {
-  let size = 6;
+  let size = 12;
 
-  if (props.inTraining) {
-    size = 12;
-  }
   const classes = useStyles();
   return (
     <div className={classes.root}>
-      <Grid container spacing={3}>
-        {!props.inTraining ? (
-          <Grid item lg={size} md={size} xs={12}>
-            <Fab
-              variant="extended"
-              size="small"
-              color="primary"
-              className={classes.button}
-              onClick={props.handlePlot}
-            >
-              Plot
-            </Fab>
-          </Grid>
-        ) : null}
-        <Grid item lg={size} md={size} xs={12}>
-          <Fab
-            variant="extended"
-            size="small"
-            color="primary"
-            className={classes.button}
-            onClick={props.handleTrain}
-          >
-            Train
-          </Fab>
-        </Grid>
+      <ExpansionPanel defaultExpanded>
+        <ExpansionPanelSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1c-content"
+          id="panel1c-header"
+        >
+          <div className={classes.column}>
+            <Typography className={classes.heading}>Plot</Typography>
+          </div>
+          <div className={classes.column}>
+            <Typography className={classes.secondaryHeading}>
+              Series Plot of the data
+            </Typography>
+          </div>
+        </ExpansionPanelSummary>
 
-        {props.data.length > 0 && !props.inTraining ? (
-          <Grid item lg={size} md={size} xs={12}>
-            <TSPlot datasets={props.data} />
+        <ExpansionPanelDetails className={classes.details}>
+          <Grid container spacing={3}>
+            {props.data.length > 0 ? (
+              <Grid item lg={size} md={size} xs={12}>
+                <TSPlot datasets={props.data} />
+              </Grid>
+            ) : null}
           </Grid>
-        ) : null}
-
-        {props.lossData.X.length > 0 ? (
-          <Grid item lg={size} md={size} xs={12}>
-            <LossPlot data={props.lossData} />
-          </Grid>
-        ) : null}
-      </Grid>
+        </ExpansionPanelDetails>
+      </ExpansionPanel>
     </div>
   );
 };

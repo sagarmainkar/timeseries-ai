@@ -71,6 +71,7 @@ export default class TimeSeriesData {
     if (!_tsData_instance) {
       _tsData_instance = this;
     }
+
     this.df = null;
     this.data = null;
     this.x = null;
